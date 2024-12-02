@@ -2,8 +2,10 @@ import java.io.Serializable;
 import java.util.*;
 
 public class GrafoDirigidoAciclico implements Serializable {
-    String identificador;
+
+    String nombre;
     int numeracion;
+    boolean random;
 
     ArrayList<Vertice> listaAdyacencia;
     boolean letras;
@@ -13,17 +15,17 @@ public class GrafoDirigidoAciclico implements Serializable {
         listaAdyacencia = new ArrayList<>();
         if(!letras) {
             for (int i = 0; i < n; i++) {
-                listaAdyacencia.add(new Vertice(i));
+                listaAdyacencia.add(new Vertice(i,letras));
             }
             numeracion = n;
         }else{
             for (int i = 65; i < 65 + n; i++) {
-                listaAdyacencia.add(new Vertice(i));
+                listaAdyacencia.add(new Vertice(i,letras));
             }
 
             numeracion = 65 + n;
         }
-        identificador = UUID.randomUUID().toString();
+        random = false;
     }
 
     GrafoDirigidoAciclico(){
@@ -38,12 +40,20 @@ public class GrafoDirigidoAciclico implements Serializable {
                 }
             }
             if(!existe) {
-                listaAdyacencia.add(new Vertice(x));
+                listaAdyacencia.add(new Vertice(x,letras));
             }else {
                 i--;
             }
         }
-        identificador = UUID.randomUUID().toString();
+
+        for(int i=0; i< rand.nextInt(5); i++){
+            Vertice vi = listaAdyacencia.get(rand.nextInt(4));
+            Vertice vf = listaAdyacencia.get(rand.nextInt(4));
+            if(!insertarArista(vi.getNumVertice(), vf.getNumVertice())){
+                i--;
+            }
+        }
+        random = true;
         Collections.sort(listaAdyacencia);
     }
 
@@ -93,16 +103,36 @@ public class GrafoDirigidoAciclico implements Serializable {
     }
 
     boolean nuevoVertice(){
-        for (int i = 0; i < listaAdyacencia.size(); i++) {
-            if(listaAdyacencia.get(i).getNumVertice() == numeracion){
-                return false;
+        Random rand = new Random();
+        if(!random){
+            for (int i = 0; i < listaAdyacencia.size(); i++) {
+                if(listaAdyacencia.get(i).getNumVertice() == numeracion){
+                    return false;
+                }
             }
-        }
 
-        listaAdyacencia.add(new Vertice(numeracion));
-        numeracion++;
-        Collections.sort(listaAdyacencia);
-        return true;
+            listaAdyacencia.add(new Vertice(numeracion,letras));
+            numeracion++;
+            Collections.sort(listaAdyacencia);
+            return true;
+        }else{
+            for(int i=0; i<1; i++){
+                int x = rand.nextInt(20);
+                boolean existe = false;
+                for(int j=0; j<listaAdyacencia.size(); j++){
+                    if(listaAdyacencia.get(j).getNumVertice() == x){
+                        existe = true;
+                    }
+                }
+                if(!existe) {
+                    listaAdyacencia.add(new Vertice(x,letras));
+                }else {
+                    i--;
+                }
+            }
+            Collections.sort(listaAdyacencia);
+            return true;
+        }
     }
 
     public boolean isLetras() {
@@ -111,6 +141,14 @@ public class GrafoDirigidoAciclico implements Serializable {
 
     public ArrayList<Vertice> getListaAdyacencia() {
         return listaAdyacencia;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
     }
 
     boolean insertarArista(int i, int j) throws IllegalArgumentException{
@@ -155,28 +193,40 @@ public class GrafoDirigidoAciclico implements Serializable {
         ArrayList<Vertice> orden = new ArrayList<Vertice>();
         HashMap<Vertice, Boolean>  visitados = new HashMap<Vertice, Boolean>();
 
+        if(contarAristas() < 1){
+            return "No hay aristas";
+        }
+
         Vertice inicio = null;
 
         for (Vertice v : listaAdyacencia) {
-            if(gradoDeEntrada(v.getNumVertice()) == 0){
+            if(gradoDeEntrada(v.getNumVertice()) == 0 && inicio == null){
                 inicio = v;
             }
         }
 
         if(inicio == null){
-            return null;
+            return "No existe un vértice con grado de entrada 0";
         }
 
-        orden.add(inicio);
         topologicalSortAux(inicio, listaAdyacencia, visitados, orden);
+
+        for (int i = 0; i < listaAdyacencia.size(); i++) {
+            if(!orden.contains(listaAdyacencia.get(i)) && gradoDeEntrada(listaAdyacencia.get(i).getNumVertice()) == 0){
+                topologicalSortAux(listaAdyacencia.get(i), listaAdyacencia, visitados, orden);
+            }
+        }
+
+        if(orden.size() < listaAdyacencia.size()){
+            return "No es posible mostrar todos los nodos";
+        }
 
         StringBuilder sb = new StringBuilder();
         while (!orden.isEmpty()) {
             if(!letras)
-                sb.append(orden.removeFirst().getNumVertice()).append(" - ");
+                sb.append(orden.removeLast().getNumVertice()).append(" - ");
             else
-                sb.append((char) orden.removeFirst().getNumVertice()).append(" - ");
-
+                sb.append((char) orden.removeLast().getNumVertice()).append(" - ");
 
         }
         sb.deleteCharAt(sb.length()-1);
@@ -187,20 +237,15 @@ public class GrafoDirigidoAciclico implements Serializable {
 
     void topologicalSortAux(Vertice v, ArrayList<Vertice> lista, HashMap<Vertice, Boolean> visitados, ArrayList<Vertice> orden){
         visitados.put(v, true);
-        for (int i = 0; i < v.getAristasSalida().size(); i++) {
-            Vertice adyacente = v.getAristasSalida().get(i);
-            for (int j = 0; j < v.getAristasSalida().size(); j++) {
-                if(gradoDeEntrada(v.getAristasSalida().get(j).getNumVertice()) < gradoDeEntrada(adyacente.getNumVertice())){
-                    if(visitados.get(v.getAristasSalida().get(j)) == null || visitados.get(v.getAristasSalida().get(j)) == false)
-                        adyacente = v.getAristasSalida().get(j);
-                }
-            }
-
-            if(visitados.get(adyacente) == null || !visitados.get(adyacente)){
-                orden.add(adyacente);
+        ArrayList<Vertice> aristas = v.getAristasSalida();
+        for (int i = 0; i < aristas.size(); i++) {
+            Vertice adyacente = aristas.get(i);
+            if(visitados.get(adyacente) == null || visitados.get(adyacente) == false) {
                 topologicalSortAux(adyacente, lista, visitados, orden);
             }
         }
+
+        orden.add(v);
     }
 
     boolean tieneCiclos(){
@@ -377,5 +422,37 @@ public class GrafoDirigidoAciclico implements Serializable {
         }
 
 
+    }
+
+    Integer[][] getMatrizAdyacencia(){
+        Integer[][] matrizAdyacencia = new Integer[listaAdyacencia.size() + 1][listaAdyacencia.size() + 1];
+        for (Integer[] integers : matrizAdyacencia) {
+            Arrays.fill(integers, 0);
+        }
+
+        for (int i = 1; i < listaAdyacencia.size() + 1; i++) {
+            matrizAdyacencia[i][0] = listaAdyacencia.get(i - 1).getNumVertice();
+        }
+        for (int i = 1; i < listaAdyacencia.size() + 1; i++) {
+            matrizAdyacencia[0][i] = listaAdyacencia.get(i - 1).getNumVertice();
+        }
+
+        // AQUI
+        for (int i = 1; i < listaAdyacencia.size() + 1; i++) {
+            int vertice1 = listaAdyacencia.get(i-1).getNumVertice();
+            ArrayList<Vertice> aristas1 = listaAdyacencia.get(i-1).getAristasSalida();
+            for (int j = 0; j < listaAdyacencia.size(); j++) {
+                int vertice2 = listaAdyacencia.get(j).getNumVertice();
+
+                for (Vertice arista:aristas1){
+                    if (vertice2==arista.getNumVertice()){
+                        matrizAdyacencia[i][j+1] = 1;
+                    }
+                }
+
+            }
+        }
+
+        return matrizAdyacencia;
     }
 }
