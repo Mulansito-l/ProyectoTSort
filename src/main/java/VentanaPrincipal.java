@@ -102,17 +102,17 @@ public class VentanaPrincipal {
                 for (int i = 0; i < opciones.length; i++) {
                     opciones[i] = SistemaArchivos.grafos.get(i).getNombre();
                 }
-                JComboBox comboBox = new JComboBox(opciones); comboBox.setSelectedIndex(0);
+                JComboBox comboBox = new JComboBox(opciones); comboBox.setSelectedIndex(-1);
                 JOptionPane.showMessageDialog(null, comboBox, "Seleccion grafo a abrir:",
                         JOptionPane.QUESTION_MESSAGE);
                 ventana.add(comboBox);
 
                 int abrir = comboBox.getSelectedIndex();
-                if(abrir != -1)
+                if(abrir != -1){
                     new VentanaGrafo(SistemaArchivos.grafos.get(abrir));
-
-                ventana.setVisible(false);
-                ventana.dispose();
+                    ventana.setVisible(false);
+                    ventana.dispose();
+                }
             }
         });
 

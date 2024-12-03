@@ -197,13 +197,17 @@ public class VentanaGrafo {
             public void actionPerformed(ActionEvent e) {
                 if(grafo.isLetras()){
                     try {
-                        grafo.insertarArista((int) textoArista1.getText().charAt(0), (int) textoArista2.getText().charAt(0));
+                        if(!grafo.insertarArista((int) textoArista1.getText().charAt(0), (int) textoArista2.getText().charAt(0))){
+                            JOptionPane.showMessageDialog(ventana,"La arista produce un ciclo");
+                        }
                     } catch (IllegalArgumentException ex) {
                         JOptionPane.showMessageDialog(ventana,"No es una arista válida");
                     }
                 } else{
                     try {
-                        grafo.insertarArista(Integer.parseInt(textoArista1.getText()), Integer.parseInt(textoArista2.getText()));
+                        if(!grafo.insertarArista(Integer.parseInt(textoArista1.getText()), Integer.parseInt(textoArista2.getText()))){
+                            JOptionPane.showMessageDialog(ventana,"La arista produce un ciclo");
+                        }
                     } catch (IllegalArgumentException ex) {
                         JOptionPane.showMessageDialog(ventana,"No es una arista válida");
                     }

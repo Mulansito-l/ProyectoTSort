@@ -217,6 +217,7 @@ public class GrafoDirigidoAciclico implements Serializable {
             }
         }
 
+
         if(orden.size() < listaAdyacencia.size()){
             return "No es posible mostrar todos los nodos";
         }
@@ -240,6 +241,8 @@ public class GrafoDirigidoAciclico implements Serializable {
         ArrayList<Vertice> aristas = v.getAristasSalida();
         for (int i = 0; i < aristas.size(); i++) {
             Vertice adyacente = aristas.get(i);
+
+
             if(visitados.get(adyacente) == null || visitados.get(adyacente) == false) {
                 topologicalSortAux(adyacente, lista, visitados, orden);
             }
